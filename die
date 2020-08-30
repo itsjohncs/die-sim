@@ -26,9 +26,9 @@ class AdvantagedRoll(Roll):
 
     def __repr__(self):
         if self.first >= self.second:
-            return "[{}, drop {}]".format(self.first, self.second)
+            return "{} (dropped {})".format(self.first, self.second)
         else:
-            return "[drop {}, {}]".format(self.first, self.second)
+            return "(dropped {}) {}".format(self.first, self.second)
 
 class DisadvantagedRoll(Roll):
     def __init__(self, first, second):
@@ -43,13 +43,17 @@ class DisadvantagedRoll(Roll):
 
     def __repr__(self):
         if self.first <= self.second:
-            return "[{}, drop {}]".format(self.first, self.second)
+            return "{} (dropped {})".format(self.first, self.second)
         else:
-            return "[drop {}, {}]".format(self.first, self.second)
+            return "(dropped {}) {}".format(self.first, self.second)
 
 ADVANTAGE = 1
 DISADVANTAGE = 2
 def parse_raw_advantage(advantage):
+    if advantage is None:
+        return None
+
+    advantage = advantage.strip()
     if advantage == "adv" or advantage == "advantage":
         return ADVANTAGE
     elif advantage == "dis" or advantage == "disadvantage":
@@ -75,7 +79,7 @@ def parse_input(user_input):
             num_rolls=int(num_rolls or 1),
             max_value=int(max_value),
             plus=int(plus or 0),
-            advantage=parse_raw_advantage(advantage.strip()))
+            advantage=parse_raw_advantage(advantage))
 
 
 def make_rolls(roll_info):
