@@ -115,6 +115,9 @@ def main():
         if raw.lower() == "help":
             print "Enter desired rolls in format XdY+Z"
             print "    Ex: 3d5, 5d6+9, 1d7-2, d9"
+            print
+            print "Append adv, advantage, dis, or disadvantage to your rolls"
+            print "    Ex: d20+8 adv, d10 advantage, d20 dis"
             continue
         elif raw.strip() == "":
             continue
