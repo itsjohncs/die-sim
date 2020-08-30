@@ -2,9 +2,64 @@
 
 import random, re, collections, readline
 
-RollInfo = collections.namedtuple("RollInfo", "input,num_rolls,max_value,plus")
+RollInfo = collections.namedtuple(
+    "RollInfo",
+    "input,num_rolls,max_value,plus,advantage")
 
-INPUT_RE = re.compile("^([0-9]+)?d([0-9]+)([+-][0-9]+)?$")
+class Roll(object):
+    def individual_rolls(self):
+        raise NotImplemented()
+
+    def value(self):
+        raise NotImplemented()
+
+class AdvantagedRoll(Roll):
+    def __init__(self, first, second):
+        self.first = first
+        self.second = second
+
+    def individual_rolls(self):
+        return [self.first, self.second]
+
+    def value(self):
+        return max(self.first, self.second)
+
+    def __repr__(self):
+        if self.first >= self.second:
+            return "[{}, drop {}]".format(self.first, self.second)
+        else:
+            return "[drop {}, {}]".format(self.first, self.second)
+
+class DisadvantagedRoll(Roll):
+    def __init__(self, first, second):
+        self.first = first
+        self.second = second
+
+    def individual_rolls(self):
+        return [self.first, self.second]
+
+    def value(self):
+        return min(self.first, self.second)
+
+    def __repr__(self):
+        if self.first <= self.second:
+            return "[{}, drop {}]".format(self.first, self.second)
+        else:
+            return "[drop {}, {}]".format(self.first, self.second)
+
+ADVANTAGE = 1
+DISADVANTAGE = 2
+def parse_raw_advantage(advantage):
+    if advantage == "adv" or advantage == "advantage":
+        return ADVANTAGE
+    elif advantage == "dis" or advantage == "disadvantage":
+        return DISADVANTAGE
+    else:
+        return None
+
+INPUT_RE = re.compile(
+    "^([0-9]+)?d([0-9]+)([+-][0-9]+)?"
+    "( adv(?:antage)?| dis(?:advantage)?)?$")
 def parse_input(user_input):
     split_raw = [i.strip() for i in user_input.split(",")]
     for i in split_raw:
@@ -14,16 +69,37 @@ def parse_input(user_input):
             continue
 
         # Parse out the interesting values
-        num_rolls, max_value, plus = match.groups()
+        num_rolls, max_value, plus, advantage = match.groups()
         yield RollInfo(
             input=i,
             num_rolls=int(num_rolls or 1),
             max_value=int(max_value),
-            plus=int(plus or 0))
+            plus=int(plus or 0),
+            advantage=parse_raw_advantage(advantage.strip()))
+
 
 def make_rolls(roll_info):
+    def roll():
+        return random.choice(range(1, int(roll_info.max_value) + 1))
+
     for i in xrange(roll_info.num_rolls):
-        yield random.choice(range(1, int(roll_info.max_value) + 1))
+        if roll_info.advantage is None:
+            yield roll()
+        elif roll_info.advantage == ADVANTAGE:
+            yield AdvantagedRoll(roll(), roll())
+        elif roll_info.advantage == DISADVANTAGE:
+            yield DisadvantagedRoll(roll(), roll())
+        else:
+            raise RuntimeError()
+
+def sum_rolls(rolls):
+    values = []
+    for roll in rolls:
+        if isinstance(roll, Roll):
+            values.append(roll.value())
+        else:
+            values.append(roll)
+    return sum(values)
 
 def main():
     while True:
@@ -45,7 +121,7 @@ def main():
                 continue
 
             rolls = list(make_rolls(roll_info))
-            result = sum(rolls) + roll_info.plus
+            result = sum_rolls(rolls) + roll_info.plus
             print "{} - {} (rolls: {})".format(roll_info.input, result, rolls)
 
 if __name__ == "__main__":
