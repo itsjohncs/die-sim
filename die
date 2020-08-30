@@ -4,7 +4,7 @@ import random, re, collections, readline
 
 RollInfo = collections.namedtuple("RollInfo", "input,num_rolls,max_value,plus")
 
-INPUT_RE = re.compile("([0-9]+)?d([0-9]+)(?:([+-][0-9]+))?")
+INPUT_RE = re.compile("^([0-9]+)?d([0-9]+)([+-][0-9]+)?$")
 def parse_input(user_input):
     split_raw = [i.strip() for i in user_input.split(",")]
     for i in split_raw:
