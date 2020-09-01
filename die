@@ -4,7 +4,7 @@ import random, re, collections, readline
 
 RollInfo = collections.namedtuple(
     "RollInfo",
-    "input,num_rolls,max_value,plus,advantage")
+    "input,num_rolls,max_value,plus,advantage,critical")
 
 class Roll(object):
     def individual_rolls(self):
@@ -63,7 +63,8 @@ def parse_raw_advantage(advantage):
 
 INPUT_RE = re.compile(
     "^([0-9]+)?d([0-9]+)([+-][0-9]+)?"
-    "( adv(?:antage)?| dis(?:advantage)?)?$")
+    "( adv(?:antage)?| dis(?:advantage)?)?"
+    "( crit(?:ical)?)?$")
 def parse_input(user_input):
     split_raw = [i.strip() for i in user_input.split(",")]
     for i in split_raw:
@@ -73,13 +74,14 @@ def parse_input(user_input):
             continue
 
         # Parse out the interesting values
-        num_rolls, max_value, plus, advantage = match.groups()
+        num_rolls, max_value, plus, advantage, critical = match.groups()
         yield RollInfo(
             input=i,
             num_rolls=int(num_rolls or 1),
             max_value=int(max_value),
             plus=int(plus or 0),
-            advantage=parse_raw_advantage(advantage))
+            advantage=parse_raw_advantage(advantage),
+            critical=critical is not None)
 
 
 def make_rolls(roll_info):
@@ -106,6 +108,7 @@ def sum_rolls(rolls):
     return sum(values)
 
 def main():
+    last_roll_data = None
     while True:
         try:
             raw = raw_input("> ")
@@ -116,19 +119,38 @@ def main():
             print "Enter desired rolls in format XdY+Z"
             print "    Ex: 3d5, 5d6+9, 1d7-2, d9"
             print
-            print "Append adv, advantage, dis, or disadvantage to your rolls"
+            print "Append adv, advantage, dis, or disadvantage"
             print "    Ex: d20+8 adv, d10 advantage, d20 dis"
+            print
+            print "Append crit or critical"
+            print "    Ex: 3d8+5 crit, d4 crit"
+            print
+            print "Type !crit to retroactively crit your last rolls"
+            continue
+        elif raw.strip() == "!crit":
+            if last_roll_data is None:
+                print "!crit - <error: no previous roll, type help for info>"
+                continue
+
+            for rolls, roll_info in last_roll_data:
+                result = (sum_rolls(rolls) * 2 + roll_info.plus)
+                print "{} - {} (rolls: {})".format(roll_info.input, result, rolls)
+
             continue
         elif raw.strip() == "":
             continue
 
+        last_roll_data = []
         for roll_info in parse_input(raw):
             if isinstance(roll_info, basestring):
                 print "{} - <error: invalid input, type help for info>".format(roll_info)
                 continue
 
             rolls = list(make_rolls(roll_info))
-            result = sum_rolls(rolls) + roll_info.plus
+            last_roll_data.append((rolls, roll_info))
+
+            result = (sum_rolls(rolls) * (2 if roll_info.critical else 1) +
+                      roll_info.plus)
             print "{} - {} (rolls: {})".format(roll_info.input, result, rolls)
 
 if __name__ == "__main__":
