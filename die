@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import random, re, collections, readline
+import random, re, collections, readline, os
 
 RollInfo = collections.namedtuple(
     "RollInfo",
@@ -127,6 +127,11 @@ def main():
             print
             print "Type !crit to retroactively crit your last rolls"
             continue
+        elif raw.strip() == "history":
+            for index in reversed(range(1, readline.get_current_history_length())):
+                print readline.get_history_item(index)
+
+            continue
         elif raw.strip() == "!crit":
             if last_roll_data is None:
                 print "!crit - <error: no previous roll, type help for info>"
@@ -154,9 +159,19 @@ def main():
             print "{} - {} (rolls: {})".format(roll_info.input, result, rolls)
 
 if __name__ == "__main__":
+    history_file_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), ".history")
+    try:
+        readline.read_history_file(history_file_path)
+        readline.set_history_length(1000)
+    except IOError:
+        pass
+
     try:
         main()
     except KeyboardInterrupt:
         pass
+    finally:
+        readline.write_history_file(history_file_path)
 
     print
