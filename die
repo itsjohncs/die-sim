@@ -66,6 +66,8 @@ INPUT_RE = re.compile(
     "( adv(?:antage)?| dis(?:advantage)?)?"
     "( crit(?:ical)?)?$")
 def parse_input(user_input):
+    user_input = user_input.split("#")[0]
+
     split_raw = [i.strip() for i in user_input.split(",")]
     for i in split_raw:
         match = INPUT_RE.match(i)
@@ -112,6 +114,9 @@ def main():
     while True:
         try:
             raw = raw_input("> ")
+        except KeyboardInterrupt:
+            print
+            continue
         except EOFError:
             return
 
@@ -125,10 +130,17 @@ def main():
             print "Append crit or critical"
             print "    Ex: 3d8+5 crit, d4 crit"
             print
+            print "Add # to end of line to add comment. ^r to search history."
+            print "    Ex: d20+8 adv, d8+5, 4d6 # melee attack"
+            print
             print "Type !crit to retroactively crit your last rolls"
+            print
+            print "Type history to see history (saved in .history)"
+            print
+            print "Type ^d, exit, or quit to quit"
             continue
         elif raw.strip() == "history":
-            for index in reversed(range(1, readline.get_current_history_length())):
+            for index in range(1, readline.get_current_history_length()):
                 print readline.get_history_item(index)
 
             continue
@@ -142,6 +154,8 @@ def main():
                 print "{} - {} (rolls: {})".format(roll_info.input, result, rolls)
 
             continue
+        elif raw.strip() == "quit" or raw.strip() == "exit":
+            return
         elif raw.strip() == "":
             continue
 
@@ -169,8 +183,6 @@ if __name__ == "__main__":
 
     try:
         main()
-    except KeyboardInterrupt:
-        pass
     finally:
         readline.write_history_file(history_file_path)
 
