@@ -172,6 +172,12 @@ def main():
                       roll_info.plus)
             print "{} - {} (rolls: {})".format(roll_info.input, result, rolls)
 
+        if len(last_roll_data) > 1:
+            print "total - {}".format(
+                sum(sum(rolls) for rolls, _ in last_roll_data))
+
+
+
 if __name__ == "__main__":
     history_file_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), ".history")
