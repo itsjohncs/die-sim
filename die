@@ -149,7 +149,7 @@ def main():
                 print "!crit - <error: no previous roll, type help for info>"
                 continue
 
-            for rolls, roll_info in last_roll_data:
+            for rolls, roll_info, _ in last_roll_data:
                 result = (sum_rolls(rolls) * 2 + roll_info.plus)
                 print "{} - {} (rolls: {})".format(roll_info.input, result, rolls)
 
@@ -166,16 +166,16 @@ def main():
                 continue
 
             rolls = list(make_rolls(roll_info))
-            last_roll_data.append((rolls, roll_info))
-
             result = (sum_rolls(rolls) * (2 if roll_info.critical else 1) +
                       roll_info.plus)
+
+            last_roll_data.append((rolls, roll_info, result))
+
             print "{} - {} (rolls: {})".format(roll_info.input, result, rolls)
 
         if len(last_roll_data) > 1:
             print "total - {}".format(
-                sum(sum(rolls) for rolls, _ in last_roll_data))
-
+                sum(result for _, _, result in last_roll_data))
 
 
 if __name__ == "__main__":
